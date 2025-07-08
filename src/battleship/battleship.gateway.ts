@@ -23,7 +23,8 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
       if (channel === 'room_events') {
         const eventData = JSON.parse(message);
         console.log(`Received event on channel ${channel}:`, eventData);
-        this.server.to(eventData.roomId).emit(eventData.event, eventData.data);
+
+        this.server.to(`user:test`).emit(eventData.event, eventData);
       }
     });
   }
@@ -34,5 +35,11 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
+  }
+
+  @SubscribeMessage('room:join')
+  handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() payload: { roomId: string }) {
+    client.join(payload.roomId);
+    console.log(`Client ${client.id} joined room ${payload.roomId}`);
   }
 }
