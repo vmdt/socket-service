@@ -35,6 +35,7 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
+    this.server.to(`user:test`).emit('user:disconnected', { clientId: client.id });
   }
 
   @SubscribeMessage('room:join')
