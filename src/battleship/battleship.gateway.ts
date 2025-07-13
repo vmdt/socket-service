@@ -31,6 +31,7 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
 
   handleConnection(client: Socket, ...args: any[]) {
     console.log(`Client connected: ${client.id}`);
+    this.server.to(`user:test`).emit('user:reconnected', { clientId: client.id });
   }
 
   handleDisconnect(client: Socket) {
