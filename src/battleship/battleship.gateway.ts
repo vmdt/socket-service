@@ -3,7 +3,6 @@ import { BattleshipService } from './battleship.service';
 import { Server, Socket } from 'socket.io';
 import { Inject, OnModuleInit } from '@nestjs/common';
 import Redis from 'ioredis';
-import e from 'express';
 
 @WebSocketGateway({namespace: 'battleship', cors: true})
 export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
@@ -20,20 +19,29 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
       await sub.connect();
     }
     await sub.subscribe('room_events');
+    await sub.subscribe('battleship_events');
     sub.on('message', (channel, message) => {
+      const eventData = JSON.parse(message) as {
+        event: string;
+        room_id?: string;
+        player_id?: string;
+        [key: string]: any;
+      };
       if (channel === 'room_events') {
-        const eventData = JSON.parse(message) as {
-          event: string;
-          room_id?: string;
-          player_id?: string;
-          [key: string]: any;
-        };
-        console.log(`Received event on channel ${channel}:`, eventData);
-
         if (eventData?.event == 'room:started') {
           this.server.to(eventData?.room_id || 'user:test').emit(eventData.event, eventData);
         } else {
           this.server.to(`user:test`).emit(eventData.event, eventData);
+        }
+      }
+
+
+      if (channel === 'battleship_events') {
+        switch (eventData?.event) {
+          case "battleship:attack":
+            console.log(`Battleship attack event received for room: ${eventData.room_id}`);
+            this.server.to(eventData?.room_id || 'user:test').emit(eventData.event, eventData);
+            break;
         }
       }
     });
