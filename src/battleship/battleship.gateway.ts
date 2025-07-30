@@ -28,7 +28,7 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
         [key: string]: any;
       };
       if (channel === 'room_events') {
-        if (eventData?.event == 'room:started') {
+        if (eventData?.event == 'room:started' || eventData?.event == 'room:update_options') {
           this.server.to(eventData?.room_id || 'user:test').emit(eventData.event, eventData);
         } else {
           this.server.to(`user:test`).emit(eventData.event, eventData);
