@@ -25,13 +25,20 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
         event: string;
         room_id?: string;
         player_id?: string;
+        user_id?: string;
         [key: string]: any;
       };
       if (channel === 'room_events') {
-        if (eventData?.event == 'room:started' || eventData?.event == 'room:update_options') {
+        if (eventData?.event == 'room:started' || 
+          eventData?.event == 'room:update_options' ||
+          eventData?.event == 'room:endgame'
+        ) {
           this.server.to(eventData?.room_id || 'user:test').emit(eventData.event, eventData);
         } else {
-          this.server.to(`user:test`).emit(eventData.event, eventData);
+          this.server.to(`user:${eventData?.user_id}`).emit(eventData.event, eventData);
+          if (eventData.room_id) {
+            this.server.to(eventData!.room_id).emit(eventData.event, eventData);
+          }
         }
       }
 
@@ -49,12 +56,26 @@ export class BattleshipGateway implements OnGatewayConnection, OnGatewayDisconne
 
   handleConnection(client: Socket, ...args: any[]) {
     console.log(`Client connected: ${client.id}`);
-    this.server.to(`user:test`).emit('user:reconnected', { clientId: client.id });
+    const roomId = client.handshake.query.room_id as string;
+    const userId = client.handshake.query.user_id as string;
+    console.log(`Client ${client.id} joining room ${roomId} as user ${userId}`);
+
+    // this.server.to(`user:test`).emit('user:reconnected', { clientId: client.id });
+    if (roomId)
+      this.server.to(roomId).emit('user:reconnected', { clientId: client.id, userId });
+
+    if (userId) {
+      this.server.to(`user:${userId}`).emit('user:reconnected', { clientId: client.id });
+    }
   }
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-    this.server.to(`user:test`).emit('user:disconnected', { clientId: client.id });
+    const roomId = client.handshake.query.room_id as string;
+    // this.server.to(`user:test`).emit('user:disconnected', { clientId: client.id });
+    if (roomId) {
+      this.server.to(roomId).emit('user:disconnected', { clientId: client.id });
+    }
   }
 
   @SubscribeMessage('room:join')
