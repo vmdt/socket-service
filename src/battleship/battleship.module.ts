@@ -5,6 +5,7 @@ import { ShareModule } from 'src/_share/_share.module';
 
 @Module({
   imports: [ShareModule],
-  providers: [BattleshipGateway, BattleshipService]
+  providers: [BattleshipGateway, BattleshipService],
+  exports: [BattleshipGateway],
 })
 export class BattleshipModule {}
