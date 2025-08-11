@@ -49,8 +49,12 @@ export class ChatService implements OnModuleInit, OnModuleDestroy {
         await this.rabbitConnection.close();
     }
 
-    public sendMessage(message: any) {
-        this.logger.log(`Forwarding message to socket: ${JSON.stringify(message)}`);
-        // this.battleshipGateway.server.emit('chat:message', message);
+    public sendMessage(message: {
+        sender_id: string;
+        room_id: string;
+        content: string;
+        is_log?: boolean;
+    }) {
+        this.battleshipGateway.server.to(message.room_id).emit('room:chat', message);
     }
 }
